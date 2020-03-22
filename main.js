@@ -42,7 +42,7 @@ function linePlot(data) {
     // Groups the data by City and sorts by the sum of instances per city. Only stores the number of cases.
     const nest = d3.nest()
         .key(d => d.City)
-        .rollup(leaf => d3.sum(leaf, x => x.Number))
+        .rollup(leaf => d3.max(leaf, x => x.Number))
         .entries(data)
         .sort((a, b) => b.value-a.value);
 
@@ -143,11 +143,13 @@ function linePlot(data) {
 
     // Draw the lines for each city
     const line = plot.append("g")
+        .attr("class", "lines")
         .selectAll(".line")
         .data(cityData)
         .enter()
         .append("path")
             .attr("fill", "none")
+            .attr("id", d => d.key)
             .attr("stroke", d => colorScale(d.key))
             .attr("stroke-width", 1.5)
             .attr("d", function (d){
@@ -158,8 +160,9 @@ function linePlot(data) {
             })
 
     // Draw the legend dot for each city
-    plot.selectAll("plot legend dot").append("g")
+    plot.append("g")
         .attr("class", "plot legend")
+        .selectAll("plot legend dot")
         .data(cities)
         .enter()
         .append("circle")
@@ -169,7 +172,9 @@ function linePlot(data) {
             .style("fill", d => colorScale(d));
 
     // Write the legend text for each city
-    plot.selectAll("plot legend text").append("g")
+    plot.append("g")
+        .attr("class", "plot legend")
+        .selectAll("plot legend text")
         .data(cities)
         .enter()
         .append("text")
@@ -178,7 +183,18 @@ function linePlot(data) {
             .style("fill", d => colorScale(d))
             .style("text-anchor", "left")
             .style("alignment-baseline", "middle")
-            .text(d => d);
+            .text(d => d)
+        .on("click", clickLegend);
+
+
+    function clickLegend(datum) {
+        
+        const datumClass = `#${datum}`;
+        const currentOpacity = d3.select(datumClass).style('opacity');
+        const opacity = currentOpacity == 1 ? 0:1
+
+        d3.selectAll(datumClass).transition().style("opacity", opacity);
+    }
 
     function translate(x, y) {
         // Helper function for translate CSS
