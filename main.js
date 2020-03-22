@@ -2,9 +2,12 @@
 
 function readCSV(file) {
     
+    // Object Parses a string to date according to the format
     const timeParse = d3.timeParse("%Y-%m-%d");
 
     d3.csv(file, function (d) {
+        // Function is used instead of autotype since I wanted to rename
+        // the columns. Also removes entries with no city.
         if (d.Gemeentenaam != ""){
             return {
                 Date: timeParse(d.Datum),
@@ -20,6 +23,7 @@ function readCSV(file) {
 
 function linePlot(data) {
 
+    // Total figure height. Not completely used since all plotting happens within margins
     const figHeight = 500;
     const figWidth = 1000;
 
@@ -35,13 +39,17 @@ function linePlot(data) {
     const latestDate = d3.max(data, d => d.Date);
     const earliestDate = d3.min(data, d => d.Date);
 
+    // Groups the data by City and sorts by the sum of instances per city. Only stores the number of cases.
     const nest = d3.nest()
         .key(d => d.City)
         .rollup(leaf => d3.sum(leaf, x => x.Number))
         .entries(data)
         .sort((a, b) => b.value-a.value);
 
+    // The maximum number of instances at any point in the dataset
     const maxNumber = d3.max(data, d => d.Number);
+
+    // The names of all the cities in the dataset
     const allCities = nest.map(d => d.key);
 
     // Outer parts of the plot (Title, X Label, Y Label, etc)
@@ -53,6 +61,7 @@ function linePlot(data) {
             .attr('width', innerWidth)
             .attr("transform", translate(margin.left, margin.top));
 
+    // Plot Title
     svg.append("text")
         .attr("class", "plot title")
         .attr("x", 0)
@@ -60,18 +69,21 @@ function linePlot(data) {
         .style("font-size", 25)
         .text("Growth of COVID-19 in the Netherlands");
 
+    // Subtitle
     svg.append("text")
         .attr("class", "plot subtitle")
         .attr("x", 0)
         .attr("y", padding.top/2)
         .text("Seperated by City");
 
+    // X axis
     svg.append("text")
         .attr("class", "plot xaxis")
         .attr("x", innerWidth/2)
         .attr("y", innerHeight)
         .text("Date");
 
+    // Y axis
     svg.append("text")
         .attr("class", "plot yaxis")
         .attr("x", -(padding.top + height/2))
@@ -81,25 +93,25 @@ function linePlot(data) {
         .style('text-anchor', "middle")
         .text("Number of instances")
 
-
-    
     // Plot Drawings
     
     const plot = svg.append("g")
         .attr("class", "plot")
         .attr("transform", translate(padding.left, padding.top));
 
-    
+    // Scale for the X axis. Maps the date to the width on the plot
     const xScale = d3.scaleTime()
         .domain([earliestDate, latestDate])
         .range([0, width])
         .nice();
 
+    // Scale for the Y axis. Inverted range since it is drawn from top down
     const yScale = d3.scaleLinear()
         .domain([0, maxNumber])
         .range([height, 0])
         .nice();
 
+    // Used to color the lines of the different cities according to the name of the city
     const colorScale = d3.scaleOrdinal()
         .range(d3.schemeSet2)
         .domain(allCities);
@@ -118,15 +130,18 @@ function linePlot(data) {
         .call(yAxis);
 
     
+    // Choose the top 5 cities with cases. Only 5 since more would be cluttered.
     const cities = allCities.slice(0, 5);
-    const city = allCities[0];
 
+    // Constructs a full nest of the data according the city. Stores all data.
     const fullNest = d3.nest()
         .key(d => d.City)
         .entries(data);
 
+    // Select the 5 cities with the most cases 
     const cityData = fullNest.filter(d => cities.includes(d.key));
 
+    // Draw the lines for each city
     const line = plot.append("g")
         .selectAll(".line")
         .data(cityData)
@@ -142,6 +157,7 @@ function linePlot(data) {
                     (d.values)
             })
 
+    // Draw the legend dot for each city
     plot.selectAll("plot legend dot").append("g")
         .attr("class", "plot legend")
         .data(cities)
@@ -152,6 +168,7 @@ function linePlot(data) {
             .attr("r", 7)
             .style("fill", d => colorScale(d));
 
+    // Write the legend text for each city
     plot.selectAll("plot legend text").append("g")
         .data(cities)
         .enter()
@@ -163,9 +180,8 @@ function linePlot(data) {
             .style("alignment-baseline", "middle")
             .text(d => d);
 
-    
-
     function translate(x, y) {
+        // Helper function for translate CSS
         return `translate(${x}, ${y})`
     }
 
