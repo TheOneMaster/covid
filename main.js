@@ -144,24 +144,24 @@ function linePlot(data) {
 
     plot.selectAll("plot legend dot").append("g")
         .attr("class", "plot legend")
-        .data([city])
+        .data(cities)
         .enter()
         .append("circle")
             .attr("cx", 20)
-            .attr("cy", 20)
+            .attr("cy", (d, i) => 20 + i*20)
             .attr("r", 7)
-            .style("fill", colorScale(city));
+            .style("fill", d => colorScale(d));
 
     plot.selectAll("plot legend text").append("g")
-        .data([city])
+        .data(cities)
         .enter()
         .append("text")
             .attr("x", 40)
-            .attr("y", 20)
-            .style("fill", colorScale(city))
+            .attr("y", (d, i) => 20 + i*20)
+            .style("fill", d => colorScale(d))
             .style("text-anchor", "left")
             .style("alignment-baseline", "middle")
-            .text(city);
+            .text(d => d);
 
     
 
