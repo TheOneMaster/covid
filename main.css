@@ -2,3 +2,68 @@
     font-weight: bold;
     fill: #145ea3;
 }
+
+input[type="checkbox"] {
+    display: none;
+}
+
+.checkbox {
+    position: relative;
+    width: 70px;
+    display: inline-block;
+    border: 1px solid #aaa;
+    padding: 10px 52px 8px 12px;
+    border-radius: 5px;
+    color: #888;
+    font-weight: 100;
+    cursor: pointer;
+    margin-bottom: 10px;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.checkbox::before {
+    content: '';
+    position: absolute;
+    top: 1px;
+    bottom: 1px;
+    right: 37px;
+    width: 1px;
+    background-color: #aaa;
+}
+
+.checkbox::after {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    content: '';
+    float: left;
+    width: 26px;
+    height: 26px;
+    margin: 4px;
+    border: 1px dashed #aaa;
+    border-radius: 3px;
+    background-image: url(http://dev.instinkt.dk/checkmark.png);
+    background-size: 26px 52px;
+    background-position: center top;
+    background-repeat: no-repeat;
+}
+
+input[type="checkbox"]:checked + .checkbox {
+    border: 1px solid #4575ab;
+    color: #4575ab;
+}
+
+input[type="checkbox"]:checked + .checkbox::before {
+    background-color: #4575ab;
+}
+
+input[type="checkbox"]:checked + .checkbox::after {
+    border: 1px solid #4575ab;
+    background-color: #4575ab;
+    background-position: center bottom;
+}
