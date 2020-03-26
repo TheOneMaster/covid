@@ -127,7 +127,13 @@ function linePlot(data, figHeight, figWidth) {
 
     
     // Choose the top 5 cities with cases. Only 5 since more would be cluttered.
-    const cities = allCities.slice(0, 5);
+    let cities = allCities.slice(0, 5);
+
+    // Store order of the cities
+    const cityIndex = {};
+    cities.forEach((key, index) => cityIndex[key] = index);
+
+    console.log(cityIndex);
 
     // Constructs a full nest of the data according the city. Stores all data.
     const fullNest = d3.nest()
@@ -151,9 +157,12 @@ function linePlot(data, figHeight, figWidth) {
     // const cityData = fullNest.filter(d => cities.includes(d.key));
 
     // Draw the lines for each city
-    const line = plot.append("g")
-        .attr("class", "lines")
-        .selectAll(".line")
+    const lines = plot.append("g")
+        .attr("class", "lines");
+      
+        
+    // Draw the lines for each city over time. Only the top 5 are shown by default.
+    lines.selectAll(".line")
         .data(fullNest)
         .enter()
         .append("path")
@@ -161,7 +170,7 @@ function linePlot(data, figHeight, figWidth) {
             .attr("id", d => d.key)
             .attr("stroke", d => colorScale(d.key))
             .attr("stroke-width", 1.5)
-            .attr("d", function (d){
+            .attr("d", function (d) {
                 return d3.line()
                     .x(d => xScale(d.date))
                     .y(d => yScale(d.number))
@@ -172,7 +181,10 @@ function linePlot(data, figHeight, figWidth) {
                 return opacity
             });
 
-    d3.select(".lines").append("path")
+    // The line for the mean over time. Dotted grey line
+    lines.append("path")
+        .attr("id", "Mean")
+        .attr("class", "mean")
         .attr("fill", "none")
         .attr("stroke", "grey")
         .attr("stroke-dasharray", ("3, 5"))
@@ -181,20 +193,47 @@ function linePlot(data, figHeight, figWidth) {
             .y(d => yScale(d.mean))
             (yearsNest));
 
+    // The text for the mean line. Follows the mean line path.
+    lines.append("text")
+        .attr("class", "mean")
+        .attr("dy", -5)
+        .style("font-size", "1em")
+        .style("font-family", "monospace")
+        .append("textPath")
+            .attr("xlink:href", "#Mean")
+            .attr("startOffset", "95%")
+            .text("Mean")
+
+    
+
     // Draw the legend dot for each city
 
     const legend = plot.append("g")
         .attr("class", "plot legend")
 
-    drawLegend(cities, legend);
+    cities.push("Mean");
+    cityIndex['Mean'] = 6;
 
     createCheckboxes(cities);
+
+    drawLegend(cities, legend);
+    legend.style("opacity", 1)
 
     function createCheckboxes(entries) {
         
         const lineplot = d3.select("#lineplot");
+
+        /*
+        Create a div for each checkbox. In the div there is a checkbox and a label.
+        The label name is the name of the elem that is being iterated over from the entries.
+        Both the label and the checkbox have the class "checkbox" and the checkbox id is
+        "check_{elem_name}."
+        */
         
-        lineplot.append("g")
+        const checkboxes = lineplot.append("fieldset")
+            .append("legend")
+                .html("Cities")
+                .select(function() {return this.parentNode})
             .style("vertical-align", "top")
             .style("margin", `${margin.top}px`)
             .style("padding", `${padding.top}px 0`)
@@ -204,62 +243,80 @@ function linePlot(data, figHeight, figWidth) {
             .data(entries)
             .enter()
             .append("div")
+                .style("display", "block")
                 .append("input")
                     .attr("id", d => `check_${d}`)
                     .attr("class", "checkbox")
                     .attr("type", "checkbox")
                     .attr("checked", true)
                     .on("change", clickLegend)
-                    .select( function(){
-                        return this.parentNode
-                    })
+                    .select( function() {return this.parentNode})
                 .append("label")
+                    .attr("width", 80)
                     .attr("class", "checkbox")
                     .attr("for", d => `check_${d}`)
-                    .html(d => d);             
+                    .html(d => d); 
+                    
+        return checkboxes;
     }
 
-    function drawLegend(entries, group){
-        
-        group.selectAll("plot legend dot")
-            .data(entries)
-            .enter()
-            .append("circle")
-                .attr("id", d => d.key)
-                .attr("cx", 20)
-                .attr("cy", (d, i) => 5 + i*20)
-                .attr("r", 7)
-                .style("fill", d => colorScale(d));
+    function drawLegend(entries, group) {
 
-        // Write the legend text for each city
-        legend.selectAll("plot legend text")
+        group.style("opacity", 0);
+        
+        const leg = group.selectAll("plot legend values")
             .data(entries)
             .enter()
-            .append("text")
-                .attr("x", 40)
-                .attr("y", (d, i) => 5 + i*20)
-                .style("fill", d => colorScale(d))
-                .style("text-anchor", "left")
-                .style("alignment-baseline", "middle")
-                .text(d => d);
+            .append("g")
+                .append("circle")
+                    .attr("id", d => d.key)
+                    .attr("cx", 20)
+                    .attr("cy", (d, i) => 5 + i*25)
+                    .attr("r", 7)
+                    .style("fill", d => d ==='Mean' ? 'grey':colorScale(d))
+                    .select(function(d) {
+                        return this.parentNode;
+                    })
+                .append("text")
+                    .attr("x", 40)
+                    .attr("y", (d, i) => 5 + i*25)
+                    .style("fill", d => d ==='Mean' ? 'grey':colorScale(d))
+                    .attr("text-anchor", "left")
+                    .attr("alignment-baseline", "middle")
+                    .text(d => d);
+            
     }
 
     function clickLegend(datum) {
         
-        const datumClass = `#${datum}`;
+        const datumClass = datum === "Mean" ? '.mean':`#${datum}`;
         const currentOpacity = d3.select(datumClass).style('opacity');
         const opacity = currentOpacity == 1 ? 0:1
 
-        d3.select(datumClass).transition().style("opacity", opacity);
+        d3.selectAll(datumClass).transition().style("opacity", opacity);
         
+        cities = cities.includes(datum) ? cities.filter(elem => elem!==datum):cities.concat(datum);
+        let cityWithIndex = cities.map((elem) => [elem, cityIndex[elem]]);
+
+        cityWithIndex = cityWithIndex.sort((a, b) => a[1] - b[1]);
+        cities = cityWithIndex.map((elem) => elem[0]);
+        
+        updateLegend(cities);       
     }
 
-    function clearLegend() {
+    function updateLegend(entries) {
 
         const legendChildren = legend.selectAll("*");
         legendChildren.transition()
+            .delay(100)
             .style("opacity", 0);
+
         legendChildren.remove();
+
+        drawLegend(entries, legend);
+
+        legend.transition()
+            .style("opacity", 1);
     }
 
     function translate(x, y) {

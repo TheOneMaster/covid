@@ -9,7 +9,7 @@ input[type="checkbox"] {
 
 .checkbox {
     position: relative;
-    width: 70px;
+    width: 90px;
     display: inline-block;
     border: 1px solid #aaa;
     padding: 10px 52px 8px 12px;
