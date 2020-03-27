@@ -212,7 +212,7 @@ function linePlot(data, figHeight, figWidth) {
 
     // Add the Mean value to the list of cities and make it the last index value (always at the bottom)
     cities.push("Mean");
-    cityIndex['Mean'] = 6;
+    cityIndex['Mean'] = allCities.length;
 
     // Create Checkboxes to act as filters for the cities
     // createCheckboxes(cities);
@@ -252,47 +252,6 @@ function linePlot(data, figHeight, figWidth) {
     // Draw the legend for the cities
     drawLegend(cities, legend);
     legend.style("opacity", 1);
-
-    function createCheckboxes(entries) {
-        
-        const lineplot = d3.select("#lineplot");
-
-        /*
-        Create a div for each checkbox. In the div there is a checkbox and a label.
-        The label name is the name of the elem that is being iterated over from the entries.
-        Both the label and the checkbox have the class "checkbox" and the checkbox id is
-        "check_{elem_name}."
-        */
-        
-        const checkboxes = lineplot.append("fieldset")
-            .append("legend")
-                .html("Cities")
-                .select(function() {return this.parentNode})
-            .style("vertical-align", "top")
-            .style("margin", `${margin.top}px`)
-            .style("padding", `${padding.top}px 0`)
-            .style("display", "inline-block")
-            .attr("id", "checkboxes")
-            .selectAll(".check")
-            .data(entries)
-            .enter()
-            .append("div")
-                .style("display", "block")
-                .append("input")
-                    .attr("id", d => `check_${d}`)
-                    .attr("class", "checkbox")
-                    .attr("type", "checkbox")
-                    .attr("checked", true)
-                    .on("change", clickLegend)
-                    .select(function() {return this.parentNode})
-                .append("label")
-                    .attr("width", 80)
-                    .attr("class", "checkbox")
-                    .attr("for", d => `check_${d}`)
-                    .html(d => d); 
-                    
-        return checkboxes;
-    }
 
     function drawLegend(entries, group) {
 
