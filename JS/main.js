@@ -87,7 +87,7 @@ function linePlot(data, figHeight, figWidth) {
         .attr("transform", "rotate(-90)")
         .attr("dy", "1em")
         .style('text-anchor', "middle")
-        .text("Number of instances")
+        .text("Number of instances");
 
     // Plot Drawings
     
@@ -131,9 +131,7 @@ function linePlot(data, figHeight, figWidth) {
 
     // Store order of the cities
     const cityIndex = {};
-    cities.forEach((key, index) => cityIndex[key] = index);
-
-    console.log(cityIndex);
+    allCities.forEach((key, index) => cityIndex[key] = index);
 
     // Constructs a full nest of the data according the city. Stores all data.
     const fullNest = d3.nest()
@@ -202,22 +200,58 @@ function linePlot(data, figHeight, figWidth) {
         .append("textPath")
             .attr("xlink:href", "#Mean")
             .attr("startOffset", "95%")
-            .text("Mean")
+            .text("Mean");
 
     
 
     // Draw the legend dot for each city
 
+    // The group where the legends are going to be drawn
     const legend = plot.append("g")
-        .attr("class", "plot legend")
+        .attr("class", "plot legend");
 
+    // Add the Mean value to the list of cities and make it the last index value (always at the bottom)
     cities.push("Mean");
     cityIndex['Mean'] = 6;
 
-    createCheckboxes(cities);
+    // Create Checkboxes to act as filters for the cities
+    // createCheckboxes(cities);
 
+    // Add meta-features to the lineplot (filter, etc)
+    const lineplot = d3.select("#lineplot");
+
+    // Create a field containing a list of all cities to choose from as filters
+    const filters = lineplot.append("fieldset")
+        .style("display", "inline-block")
+        .style("max-height", `${figHeight}px`)
+        .style("min-height", `${figHeight}px`)
+        .style("vertical-align", "top")
+        .style("overflow", "hidden");
+        
+    filters.append("legend")
+            .html("Cities");
+    
+    filters.append("input")
+        .attr("type", "text")
+        .attr("id", "filterSearch")
+        .attr("placeholder", "Search for cities..")
+        .on("keyup", () => filterSearch(d3.event.path[0]));
+
+    filters.append("ul")
+            .attr("id", "lineplotFilter")
+            .selectAll(".cities")
+            .data(allCities)
+            .enter()
+            .append("li")
+                .append("a")
+                    .attr("href", "#")
+                    .on("click", clickLegend)
+                    .html(d => d);
+        
+
+    // Draw the legend for the cities
     drawLegend(cities, legend);
-    legend.style("opacity", 1)
+    legend.style("opacity", 1);
 
     function createCheckboxes(entries) {
         
@@ -250,7 +284,7 @@ function linePlot(data, figHeight, figWidth) {
                     .attr("type", "checkbox")
                     .attr("checked", true)
                     .on("change", clickLegend)
-                    .select( function() {return this.parentNode})
+                    .select(function() {return this.parentNode})
                 .append("label")
                     .attr("width", 80)
                     .attr("class", "checkbox")
@@ -318,11 +352,38 @@ function linePlot(data, figHeight, figWidth) {
         legend.transition()
             .style("opacity", 1);
     }
+    
+    function filterSearch(elem) {
 
-    function translate(x, y) {
-        // Helper function for translate CSS
-        return `translate(${x}, ${y})`
+        // The value currently present in text entry
+        const key = elem.value.toUpperCase();
+
+        // Select the unordered list
+        const list = document.getElementById("lineplotFilter");
+
+        // Select all list items
+        const items = list.getElementsByTagName("li");
+        
+        let a, txtValue;
+        for (let i = 0; i < items.length; i++) {
+            a = items[i].getElementsByTagName("a")[0];
+            txtValue = a.textContent || a.innerText;
+            if (txtValue.toUpperCase().indexOf(key) > -1) {
+              items[i].style.display = "";
+            } else {
+              items[i].style.display = "none";
+            }
+          }
+        
+        
+
+        
     }
+}
+
+function translate(x, y) {
+    // Helper function for translate CSS
+    return `translate(${x}, ${y})`
 }
 
 function main() {
