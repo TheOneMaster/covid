@@ -89,7 +89,7 @@ function linePlot(data, figHeight, figWidth) {
         .style('text-anchor', "middle")
         .text("Number of instances");
 
-    // Plot Drawings
+    /* Plot Drawing */
     
     const plot = svg.append("g")
         .attr("class", "plot")
@@ -109,21 +109,18 @@ function linePlot(data, figHeight, figWidth) {
 
     // Used to color the lines of the different cities according to the name of the city
     const colorScale = d3.scaleOrdinal()
-        .range(["#6097ce","#c57c3d","#a265c2","#72a553","#ca5572"])
+        .range(d3.schemePaired)
         .domain(allCities);
 
-    const xAxis = d3.axisBottom(xScale);
-    const yAxis = d3.axisLeft(yScale);
-
-    plot.append("g")
+    const xAxis = plot.append("g")
         .attr("class", "plot xaxis")
         .attr("transform", translate(0, height))
         .attr("text-anchor", "middle")
-        .call(xAxis);
+        .call(d3.axisBottom(xScale));
 
-    plot.append("g")
+    const yAxis = plot.append("g")
         .attr("class", "plot yaxis")
-        .call(yAxis);
+        .call(d3.axisLeft(yScale));
 
     
     // Choose the top 5 cities with cases. Only 5 since more would be cluttered.
@@ -132,6 +129,10 @@ function linePlot(data, figHeight, figWidth) {
     // Store order of the cities
     const cityIndex = {};
     allCities.forEach((key, index) => cityIndex[key] = index);
+
+    // Add the Mean value to the list of cities and make it the last index value (always at the bottom)
+    cities.push("Mean");
+    cityIndex['Mean'] = allCities.length;
 
     // Constructs a full nest of the data according the city. Stores all data.
     const fullNest = d3.nest()
@@ -151,10 +152,8 @@ function linePlot(data, figHeight, figWidth) {
             return d.value
         });
 
-    // Select the 5 cities with the most cases 
-    // const cityData = fullNest.filter(d => cities.includes(d.key));
+    /* Draw the lines for each city */
 
-    // Draw the lines for each city
     const lines = plot.append("g")
         .attr("class", "lines");
       
@@ -165,7 +164,16 @@ function linePlot(data, figHeight, figWidth) {
         .enter()
         .append("path")
             .attr("fill", "none")
-            .attr("id", d => d.key)
+            .attr("class", "line")
+            .attr("id", function(d){
+                let name = d.key;
+                
+                if (name.includes("'")){
+                    name = name.replace("'", "");
+                }
+                
+                return name;
+            })
             .attr("stroke", d => colorScale(d.key))
             .attr("stroke-width", 1.5)
             .attr("d", function (d) {
@@ -176,7 +184,7 @@ function linePlot(data, figHeight, figWidth) {
             })
             .style("opacity", function(d) {
                 const opacity = cities.includes(d.key)? 1:0;
-                return opacity
+                return opacity;
             });
 
     // The line for the mean over time. Dotted grey line
@@ -202,22 +210,18 @@ function linePlot(data, figHeight, figWidth) {
             .attr("startOffset", "95%")
             .text("Mean");
 
-    
-
-    // Draw the legend dot for each city
+    /* Draw the legend for the cities */
 
     // The group where the legends are going to be drawn
     const legend = plot.append("g")
         .attr("class", "plot legend");
+    
+    drawLegend(cities, legend);
+    legend.style("opacity", 1);
 
-    // Add the Mean value to the list of cities and make it the last index value (always at the bottom)
-    cities.push("Mean");
-    cityIndex['Mean'] = allCities.length;
 
-    // Create Checkboxes to act as filters for the cities
-    // createCheckboxes(cities);
+    /* Add meta-features to the lineplot (filter, etc) */
 
-    // Add meta-features to the lineplot (filter, etc)
     const lineplot = d3.select("#lineplot");
 
     // Create a field containing a list of all cities to choose from as filters
@@ -227,31 +231,33 @@ function linePlot(data, figHeight, figWidth) {
         .style("min-height", `${figHeight}px`)
         .style("vertical-align", "top")
         .style("overflow", "hidden");
-        
-    filters.append("legend")
-            .html("Cities");
     
+    // Legend (Label) for the fieldset
+    filters.append("legend")
+        .html("Cities");
+    
+    // Create search entry
     filters.append("input")
         .attr("type", "text")
         .attr("id", "filterSearch")
         .attr("placeholder", "Search for cities..")
         .on("keyup", () => filterSearch(d3.event.path[0]));
 
+    // Add cities as list items that are clickable
     filters.append("ul")
-            .attr("id", "lineplotFilter")
-            .selectAll(".cities")
-            .data(allCities)
-            .enter()
-            .append("li")
-                .append("a")
-                    .attr("href", "#")
-                    .on("click", clickLegend)
-                    .html(d => d);
+        .attr("id", "lineplotFilter")
+        .selectAll(".cities")
+        .data(allCities)
+        .enter()
+        .append("li")
+            // .style("display", (d, index) => index < 9 ? "":"none")
+            .append("a")
+                .attr("href", "#")
+                .on("click", clickLegend)
+                .html(d => d);
         
+    // TODO: Add Zoom functionality to plot
 
-    // Draw the legend for the cities
-    drawLegend(cities, legend);
-    legend.style("opacity", 1);
 
     function drawLegend(entries, group) {
 
@@ -262,7 +268,10 @@ function linePlot(data, figHeight, figWidth) {
             .enter()
             .append("g")
                 .append("circle")
-                    .attr("id", d => d.key)
+                    .attr("id", function(name){
+                        if (name.includes("'")) name = name.replace("'", "");
+                        return name;
+                    })
                     .attr("cx", 20)
                     .attr("cy", (d, i) => 5 + i*25)
                     .attr("r", 7)
@@ -281,6 +290,8 @@ function linePlot(data, figHeight, figWidth) {
     }
 
     function clickLegend(datum) {
+        
+        if (datum.includes("'")) datum = datum.replace("'", "");
         
         const datumClass = datum === "Mean" ? '.mean':`#${datum}`;
         const currentOpacity = d3.select(datumClass).style('opacity');
@@ -333,10 +344,6 @@ function linePlot(data, figHeight, figWidth) {
               items[i].style.display = "none";
             }
           }
-        
-        
-
-        
     }
 }
 
