@@ -127,7 +127,7 @@ function linePlot(data, figHeight, figWidth) {
     let cities = allCities.slice(0, 5);
 
     // Store order of the cities
-    const cityIndex = {};
+    let cityIndex = {};
     allCities.forEach((key, index) => cityIndex[key] = index);
 
     // Add the Mean value to the list of cities and make it the last index value (always at the bottom)
@@ -247,10 +247,9 @@ function linePlot(data, figHeight, figWidth) {
     filters.append("ul")
         .attr("id", "lineplotFilter")
         .selectAll(".cities")
-        .data(allCities)
+        .data(allCities.concat(['Mean']))
         .enter()
         .append("li")
-            // .style("display", (d, index) => index < 9 ? "":"none")
             .append("a")
                 .attr("href", "#")
                 .on("click", clickLegend)
@@ -291,9 +290,9 @@ function linePlot(data, figHeight, figWidth) {
 
     function clickLegend(datum) {
         
-        if (datum.includes("'")) datum = datum.replace("'", "");
+        let cleanedName = datum.includes("'") ? datum.replace("'", ""):datum;
         
-        const datumClass = datum === "Mean" ? '.mean':`#${datum}`;
+        const datumClass = cleanedName === "Mean" ? '.mean':`#${cleanedName}`;
         const currentOpacity = d3.select(datumClass).style('opacity');
         const opacity = currentOpacity == 1 ? 0:1
 
@@ -301,6 +300,7 @@ function linePlot(data, figHeight, figWidth) {
         
         cities = cities.includes(datum) ? cities.filter(elem => elem!==datum):cities.concat(datum);
         let cityWithIndex = cities.map((elem) => [elem, cityIndex[elem]]);
+        console.log(cityWithIndex);
 
         cityWithIndex = cityWithIndex.sort((a, b) => a[1] - b[1]);
         cities = cityWithIndex.map((elem) => elem[0]);
@@ -356,7 +356,10 @@ function main() {
 
     const infectionsURL = "https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data/rivm_corona_in_nl.csv";
     
-    readCSV(infectionsURL).then(d => linePlot(d, 500, 1000));
+    const data = readCSV(infectionsURL)
+    data.then(data => linePlot(data, 500, 1000));
+
+
 }
 
 main()
