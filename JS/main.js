@@ -23,6 +23,10 @@ function readCSV(file) {
 
 function linePlot(data, figHeight, figWidth) {
 
+    /*
+    Draw the lineplot for the number of instances of COVID-19 per city over time
+    */
+
     const margin = {top:20, bottom:20, left:20, right:20};
     const padding = {top:40, bottom:40, left:40, right:20};
 
@@ -42,13 +46,11 @@ function linePlot(data, figHeight, figWidth) {
             return {
                 max: d3.max(leaf, x => x.number),
                 mean: d3.mean(leaf, x => x.number),
-                sum: d3.sum(leaf, x => x.number)
+                sum: d3.sum(leaf, x => x.number),
             }
         })
         .entries(data)
         .sort((a, b) => b.value.max-a.value.max);
-
-    // console.log(cityAgg[0])
 
     // The maximum number of instances at any point in the dataset
     const maxNumber = d3.max(data, d => d.number);
@@ -158,7 +160,7 @@ function linePlot(data, figHeight, figWidth) {
     const fullNest = d3.nest()
         .key(d => d.city)
         .entries(data);
-
+    
     const yearsNest = d3.nest()
         .key(d => d.date)
         .rollup(function(leaves) {
@@ -228,7 +230,7 @@ function linePlot(data, figHeight, figWidth) {
         .attr("class", "plot legend")
         .style("fill", "white");
     
-    let tmp = legend.append("rect")
+    // let tmp = legend.append("rect")
     
     drawLegend(cities, legend);    
 
