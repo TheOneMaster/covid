@@ -3,6 +3,13 @@
     fill: #145ea3;
 }
 
+.grid {
+    stroke-dasharray: 3, 3;
+    color: lightgrey;
+    stroke-opacity: 0.7;
+    shape-rendering: crispEdges;
+}
+
 /* Checkbox CSS */
 
 input[type="checkbox"] {
@@ -95,7 +102,7 @@ input[type="checkbox"]:checked + .checkbox::after {
     padding: 1px 0 0 0;
 }
 
-#lineplotFilter > li > a {
+.filter {
     border: 1px solid #ddd;
     margin-top: -1px;
     background-color: #f6f6f6;
@@ -106,6 +113,13 @@ input[type="checkbox"]:checked + .checkbox::after {
     display: block;
 }
 
-#lineplotFilter > li > a:hover:not(.header) {
+.filter:hover:not(.header) {
     background-color: #eee; /* Add a hover effect to all links, except for headers */
   }
+
+.filter.selected {
+    background-image: url("Images/Icons8_flat_checkmark.svg.png");
+    background-position: 95%;
+    background-size: 20px;
+    background-repeat: no-repeat;
+}

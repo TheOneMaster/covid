@@ -1,4 +1,4 @@
-'use strict'
+'use strict' 
 
 function readCSV(file) {
     
@@ -36,17 +36,25 @@ function linePlot(data, figHeight, figWidth) {
     const earliestDate = d3.min(data, d => d.date);
 
     // Groups the data by City and sorts by the sum of instances per city. Only stores the number of cases.
-    const nest = d3.nest()
+    const cityAgg = d3.nest()
         .key(d => d.city)
-        .rollup(leaf => d3.max(leaf, x => x.number))
+        .rollup(function(leaf){
+            return {
+                max: d3.max(leaf, x => x.number),
+                mean: d3.mean(leaf, x => x.number),
+                sum: d3.sum(leaf, x => x.number)
+            }
+        })
         .entries(data)
-        .sort((a, b) => b.value-a.value);
+        .sort((a, b) => b.value.max-a.value.max);
+
+    // console.log(cityAgg[0])
 
     // The maximum number of instances at any point in the dataset
     const maxNumber = d3.max(data, d => d.number);
 
     // The names of all the cities in the dataset
-    const allCities = nest.map(d => d.key);
+    const allCities = cityAgg.map(d => d.key);
 
     // Outer parts of the plot (Title, X Label, Y Label, etc)
     const svg = d3.select("#lineplot").append("svg")
@@ -112,15 +120,27 @@ function linePlot(data, figHeight, figWidth) {
         .range(d3.schemePaired)
         .domain(allCities);
 
-    const xAxis = plot.append("g")
+    const axes = plot.append("g")
+        .attr("class", "plot axes");
+    
+    const xAxis = axes.append("g")
         .attr("class", "plot xaxis")
         .attr("transform", translate(0, height))
         .attr("text-anchor", "middle")
-        .call(d3.axisBottom(xScale));
+        .call(d3.axisBottom(xScale)
+            .ticks(d3.timeDay.every(5))
+            .tickFormat(d3.timeFormat("%b %d")));
 
-    const yAxis = plot.append("g")
+    const yAxis = axes.append("g")
         .attr("class", "plot yaxis")
         .call(d3.axisLeft(yScale));
+
+    axes.append("g")
+        .attr("class", "grid")
+        .call(d3.axisLeft(yScale)
+            .tickSize(-width)
+            .ticks(5)
+            .tickFormat(""));
 
     
     // Choose the top 5 cities with cases. Only 5 since more would be cluttered.
@@ -156,7 +176,6 @@ function linePlot(data, figHeight, figWidth) {
 
     const lines = plot.append("g")
         .attr("class", "lines");
-      
         
     // Draw the lines for each city over time. Only the top 5 are shown by default.
     lines.selectAll(".line")
@@ -165,15 +184,7 @@ function linePlot(data, figHeight, figWidth) {
         .append("path")
             .attr("fill", "none")
             .attr("class", "line")
-            .attr("id", function(d){
-                let name = d.key;
-                
-                if (name.includes("'")){
-                    name = name.replace("'", "");
-                }
-                
-                return name;
-            })
+            .attr("id", d => cleanText(d.key))
             .attr("stroke", d => colorScale(d.key))
             .attr("stroke-width", 1.5)
             .attr("d", function (d) {
@@ -188,9 +199,9 @@ function linePlot(data, figHeight, figWidth) {
             });
 
     // The line for the mean over time. Dotted grey line
-    lines.append("path")
+    const line = lines.append("path")
         .attr("id", "Mean")
-        .attr("class", "mean")
+        .attr("class", "line mean")
         .attr("fill", "none")
         .attr("stroke", "grey")
         .attr("stroke-dasharray", ("3, 5"))
@@ -214,11 +225,12 @@ function linePlot(data, figHeight, figWidth) {
 
     // The group where the legends are going to be drawn
     const legend = plot.append("g")
-        .attr("class", "plot legend");
+        .attr("class", "plot legend")
+        .style("fill", "white");
     
-    drawLegend(cities, legend);
-    legend.style("opacity", 1);
-
+    let tmp = legend.append("rect")
+    
+    drawLegend(cities, legend);    
 
     /* Add meta-features to the lineplot (filter, etc) */
 
@@ -230,7 +242,7 @@ function linePlot(data, figHeight, figWidth) {
         .style("max-height", `${figHeight}px`)
         .style("min-height", `${figHeight}px`)
         .style("vertical-align", "top")
-        .style("overflow", "hidden");
+        .style("min-width", "285px");
     
     // Legend (Label) for the fieldset
     filters.append("legend")
@@ -251,26 +263,20 @@ function linePlot(data, figHeight, figWidth) {
         .enter()
         .append("li")
             .append("a")
+                .attr("class", (d) => cities.includes(d) ? "filter selected":"filter")
                 .attr("href", "#")
                 .on("click", clickLegend)
                 .html(d => d);
+
+    function drawLegend(entries) {
         
-    // TODO: Add Zoom functionality to plot
-
-
-    function drawLegend(entries, group) {
-
-        group.style("opacity", 0);
-        
-        const leg = group.selectAll("plot legend values")
+        const leg = legend.selectAll("plot legend values")
             .data(entries)
             .enter()
             .append("g")
+                .attr("id", d => cleanText(d))
                 .append("circle")
-                    .attr("id", function(name){
-                        if (name.includes("'")) name = name.replace("'", "");
-                        return name;
-                    })
+                    // .attr("id", d => cleanText(d))
                     .attr("cx", 20)
                     .attr("cy", (d, i) => 5 + i*25)
                     .attr("r", 7)
@@ -290,26 +296,40 @@ function linePlot(data, figHeight, figWidth) {
 
     function clickLegend(datum) {
         
-        let cleanedName = datum.includes("'") ? datum.replace("'", ""):datum;
+        // Clean Text for ID entry. For example, no spaces or apostrophes.
+        const cleanedName = cleanText(datum);
         
+        // Either select the mean class (line+text) or the city id for the line
         const datumClass = cleanedName === "Mean" ? '.mean':`#${cleanedName}`;
+
+        // Get the opposite of the current opacity and change it to that
         const currentOpacity = d3.select(datumClass).style('opacity');
-        const opacity = currentOpacity == 1 ? 0:1
-
-        d3.selectAll(datumClass).transition().style("opacity", opacity);
+        const opacity = currentOpacity == 1 ? 0:1;
+        d3.selectAll(datumClass)
+            .transition()
+            .style("opacity", opacity);
         
-        cities = cities.includes(datum) ? cities.filter(elem => elem!==datum):cities.concat(datum);
-        let cityWithIndex = cities.map((elem) => [elem, cityIndex[elem]]);
-        console.log(cityWithIndex);
-
-        cityWithIndex = cityWithIndex.sort((a, b) => a[1] - b[1]);
-        cities = cityWithIndex.map((elem) => elem[0]);
+        // Add or remove city from list of cities in the legend
+        if (cities.includes(datum)){
+            d3.select(this).classed("selected", false);
+            cities = cities.filter(elem => elem!==datum);
+        } else{
+            d3.select(this).classed("selected", true);
+            cities = cities.concat(datum);
+        }
         
+        // cities = cities.includes(datum) ? cities.filter(elem => elem!==datum):cities.concat(datum);
+
+        // Resort according to index value
+        cities = cities.sort((a, b) => cityIndex[a] - cityIndex[b]);
+        
+        // Redraw the legend
         updateLegend(cities);       
     }
 
     function updateLegend(entries) {
 
+        // Transition to 0 opacity for effect (since remove cannot be transitioned to)
         const legendChildren = legend.selectAll("*");
         legendChildren.transition()
             .delay(100)
@@ -317,8 +337,13 @@ function linePlot(data, figHeight, figWidth) {
 
         legendChildren.remove();
 
-        drawLegend(entries, legend);
+        // Set opacity to 0 so items to do not immediately appear, only after transition
+        legend.style("opacity", 0);
 
+        // Redraw according for the cities provided
+        drawLegend(entries);
+
+        // Set opacity to 1 with transition
         legend.transition()
             .style("opacity", 1);
     }
@@ -336,8 +361,13 @@ function linePlot(data, figHeight, figWidth) {
         
         let a, txtValue;
         for (let i = 0; i < items.length; i++) {
+            // Get the hyperref element
             a = items[i].getElementsByTagName("a")[0];
+
+            // Select the text from the element
             txtValue = a.textContent || a.innerText;
+
+            // Checks if the key (text entry) has ever appeared in the text for the element 
             if (txtValue.toUpperCase().indexOf(key) > -1) {
               items[i].style.display = "";
             } else {
@@ -345,11 +375,20 @@ function linePlot(data, figHeight, figWidth) {
             }
           }
     }
+
 }
 
 function translate(x, y) {
     // Helper function for translate CSS
     return `translate(${x}, ${y})`
+}
+
+function cleanText(text) {
+
+    let cleanText = text.includes("'") ? text.replace("'", ""):text;
+    cleanText = cleanText.includes(" ") ? cleanText.replace(/\s+/g, "_"):cleanText;
+
+    return cleanText;
 }
 
 function main() {
