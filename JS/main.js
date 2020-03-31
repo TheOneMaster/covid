@@ -242,7 +242,7 @@ function linePlot(data, figHeight, figWidth) {
         .style("max-height", `${figHeight}px`)
         .style("min-height", `${figHeight}px`)
         .style("vertical-align", "top")
-        .style("min-width", "285px");
+        .style("min-width", "290px");
     
     // Legend (Label) for the fieldset
     filters.append("legend")
