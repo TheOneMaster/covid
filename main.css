@@ -1,3 +1,31 @@
+:root{
+    --bg-color: #fff;
+    --font-color: #424242;
+}
+
+[data-theme="dark"] {
+    --bg-color: #121212;
+    --font-color: #fff;
+}
+
+
+.body{
+    background-color: var(--bg-color);
+}
+
+
+.tab {
+    display: inline-block;
+}
+
+.tab.interact {
+    float:left;
+}
+
+.tab.chart {
+    margin: 40px 0px;
+}
+
 .plot.title {
     font-weight: bold;
     fill: #145ea3;
@@ -12,7 +40,7 @@
 
 /* Filter CSS */
 
-#filterSearch {
+#citySearch {
     background-image: url('Images/searchicon.png'); /* Add a search icon to input */
     background-position: 10px 12px; /* Position the search icon */
     background-repeat: no-repeat; /* Do not repeat the icon image */
@@ -23,7 +51,7 @@
     margin-bottom: 12px; /* Add some space below the input */
   }
 
-#lineplotFilter {
+#cityFilter {
     list-style-type: none;
     padding: 0;
     margin: 0;
@@ -31,7 +59,7 @@
     overflow: auto;
 }
 
-#lineplotFilter li:first-child{
+#cityFilter li:not([style="display:none;"]) {
     padding: 1px 0 0 0;
 }
 
@@ -42,7 +70,7 @@
     padding: 12px;
     text-decoration: none;
     font-size: 18px;
-    color: black;
+    color: var(--font-color);
     display: block;
 }
 
@@ -56,3 +84,7 @@
     background-size: 20px;
     background-repeat: no-repeat;
 }
+
+
+/*Simple css to style it like a toggle switch*/
+
