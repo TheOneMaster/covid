@@ -1,90 +1,174 @@
-:root{
-    --bg-color: #fff;
-    --font-color: #424242;
+:root {
+  --bg-color: #fff;
+  --font-color-1: #424242;
+  --font-color-2: #474747;
+  --fill-color: black;
+  --stroke-color: grey;
+  --hover-color: #eee;
 }
 
 [data-theme="dark"] {
-    --bg-color: #121212;
-    --font-color: #fff;
+  --bg-color: #121212;
+  --font-color-1: rgba(255, 255, 255, 0.9);
+  --font-color-2: rgba(255, 255, 255, 0.8);
+  --fill-color: rgba(255, 255, 255, 0.65);
+  --hover-color: #1c2c3f;
 }
 
+/* Body Elements */
 
-.body{
-    background-color: var(--bg-color);
+body {
+  background-color: var(--bg-color);
+  color: var(--font-color-2);
+  fill: var(--fill-color);
+}
+
+h1 {
+    color: var(--font-color-1);
 }
 
 
 .tab {
-    display: inline-block;
+  display: inline-block;
 }
 
 .tab.interact {
-    float:left;
+  float: left;
 }
 
 .tab.chart {
-    margin: 40px 0px;
-}
-
-.plot.title {
-    font-weight: bold;
-    fill: #145ea3;
-}
-
-.grid {
-    stroke-dasharray: 3, 3;
-    color: lightgrey;
-    stroke-opacity: 0.7;
-    shape-rendering: crispEdges;
+  margin: 40px 0px;
 }
 
 /* Filter CSS */
 
 #citySearch {
-    background-image: url('Images/searchicon.png'); /* Add a search icon to input */
-    background-position: 10px 12px; /* Position the search icon */
-    background-repeat: no-repeat; /* Do not repeat the icon image */
-    width: 230px;
-    font-size: 16px; /* Increase font-size */
-    padding: 12px 20px 12px 40px; /* Add some padding */
-    border: 1px solid #ddd; /* Add a grey border */
-    margin-bottom: 12px; /* Add some space below the input */
-  }
+    background-color: var(--bg-color);
+  background-image: url("Images/searchicon.png"); /* Add a search icon to input */
+  background-position: 4% 50%; /* Position the search icon */
+  background-size: 25px;
+  background-repeat: no-repeat; /* Do not repeat the icon image */
+  width: 230px;
+  font-size: 16px; /* Increase font-size */
+  padding: 12px 20px 12px 40px; /* Add some padding */
+  border: 1px solid #ddd; /* Add a grey border */
+  margin-bottom: 12px; /* Add some space below the input */
+}
 
 #cityFilter {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-    max-height: 430px;
-    overflow: auto;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  max-height: 430px;
+  overflow: auto;
 }
 
 #cityFilter li:not([style="display:none;"]) {
-    padding: 1px 0 0 0;
+  padding: 1px 0 0 0;
 }
 
 .filter {
-    border: 1px solid #ddd;
-    margin-top: -1px;
-    background-color: #f6f6f6;
-    padding: 12px;
-    text-decoration: none;
-    font-size: 18px;
-    color: var(--font-color);
-    display: block;
+    background-color: var(--bg-color);
+  border: 1px solid #ddd;
+  margin-top: -1px;
+  padding: 12px;
+  text-decoration: none;
+  font-size: 18px;
+  color: var(--font-color-1);
+  display: block;
 }
 
 .filter:hover:not(.header) {
-    background-color: #eee; /* Add a hover effect to all links, except for headers */
-  }
-
-.filter.selected {
-    background-image: url("Images/Icons8_flat_checkmark.svg.png");
-    background-position: 95%;
-    background-size: 20px;
-    background-repeat: no-repeat;
+  background-color: var(--hover-color); /* Add a hover effect to all links, except for headers */
 }
 
+.filter.selected {
+  background-image: url("Images/checkmark.png");
+  background-position: 95%;
+  background-size: 20px;
+  background-repeat: no-repeat;
+}
+
+/* Plot CSS */
+
+.plot.title {
+  font-weight: bold;
+  fill: #145ea3;
+}
+
+.plot.subtitle, #xlabel, #ylabel {
+    fill: var(--font-color-1)
+}
+
+.grid {
+  stroke-dasharray: 3, 3;
+  color: lightgrey;
+  stroke-opacity: 0.7;
+  shape-rendering: crispEdges;
+}
+
+.mean {
+    stroke: var(--stroke-color);
+    fill: var(--font-color);
+}
 
 /*Simple css to style it like a toggle switch*/
+.theme-switch-wrapper {
+  display: inline-flex;
+  align-items: center;
+  float: right;
+}
 
+.theme-switch-wrapper em {
+  margin-left: 10px;
+  font-size: 1rem;
+}
+
+.theme-switch {
+  display: inline-block;
+  height: 34px;
+  position: relative;
+  width: 60px;
+}
+
+.theme-switch input {
+  display: none;
+}
+
+.slider {
+  background-color: #ccc;
+  bottom: 0;
+  cursor: pointer;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: 0.4s;
+}
+
+.slider:before {
+  background-color: #fff;
+  bottom: 4px;
+  content: "";
+  height: 26px;
+  left: 4px;
+  position: absolute;
+  transition: 0.4s;
+  width: 26px;
+}
+
+input:checked + .slider {
+  background-color: #66bb6a;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}

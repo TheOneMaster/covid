@@ -7,14 +7,34 @@
     <title>COVID-19 Statistics</title>
 </head>
 <body>
-    <header>
-        <h1 style="text-align: center;">COVID-19 Statistics</h1>
-        
+    <header style="text-align: center;">
+        <h1 style="display:inline-block">COVID-19 Statistics</h1>
     </header>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="styletoggle">
+            <input type="checkbox" id="styletoggle">
+            <div class="slider round"></div>
+      </label>
+      <em>Enable Dark Mode!</em>
+    </div>
     <div class="tab lineplot">
         <div class="tab interact", id="lineInteract"></div>
         <div class="tab chart", id='lineChart'></div>
     </div>
 
-    
+    <script>
+    // Add CSS changing functionality to dark mode toggle
+    const styleToggle = document.getElementById('styletoggle');
+    console.log(styleToggle);
+
+    styleToggle.addEventListener("click", changeStyle, false);
+
+    function changeStyle(element){
+        if (element.target.checked){
+        document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        }
+    }
+    </script>
 </body>

@@ -23,7 +23,7 @@ function readCSV(file) {
 function linePlot(data, figHeight, figWidth) {
   /*
     Draw the lineplot for the number of instances of COVID-19 per city over time
-    */
+  */
 
   const margin = { top: 20, bottom: 20, left: 20, right: 20 };
   const padding = { top: 40, bottom: 40, left: 40, right: 20 };
@@ -120,6 +120,12 @@ function linePlot(data, figHeight, figWidth) {
 
   const interact = d3.select("#lineInteract");
 
+  interact
+    .append("input")
+    .attr("type", "checkbox")
+    .attr("class", "switch")
+    .on("click", changeChartType);
+
   // Create a field containing a list of all cities to choose from as filters
   const filters = interact
     .append("fieldset")
@@ -153,12 +159,6 @@ function linePlot(data, figHeight, figWidth) {
     .attr("href", "#")
     .on("click", clickLegend)
     .html((d) => d);
-
-  d3.select("body")
-    .append("input")
-    .attr("type", "checkbox")
-    .attr("class", "switch")
-    .on("click", changeChartType);
 
   // Outer parts of the plot (Title, X Label, Y Label, etc)
   const svg = d3
@@ -285,11 +285,10 @@ function linePlot(data, figHeight, figWidth) {
     });
 
   // The line for the mean over time. Dotted grey line
-  const line = lines
+  const meanLine = lines
     .append("path")
     .attr("id", "Mean")
     .attr("class", "line mean")
-    .attr("fill", "none")
     .attr("stroke", "grey")
     .attr("stroke-dasharray", "3, 5")
     .attr(
@@ -298,7 +297,8 @@ function linePlot(data, figHeight, figWidth) {
         .line()
         .x((d) => xScale(d.date))
         .y((d) => yScale(d.mean))(yearsNest)
-    );
+    )
+    .style("fill", "none");
 
   // The text for the mean line. Follows the mean line path.
   lines
@@ -306,6 +306,7 @@ function linePlot(data, figHeight, figWidth) {
     .attr("class", "mean")
     .attr("dy", -5)
     .style("font-size", "1em")
+    .attr("stroke-width", "0")
     .style("font-family", "monospace")
     .append("textPath")
     .attr("xlink:href", "#Mean")
@@ -422,31 +423,36 @@ function linePlot(data, figHeight, figWidth) {
   }
 
   function changeChartType() {
-    let newData, ylabel;
+    
+    const length = 500;
+    let newData, ylabel, meanVal;
     const checked = d3.select(".switch").property("checked");
 
     if (checked) {
       newData = casesPerDay;
       yScale.domain([0, maxNew]).nice();
       ylabel = "New cases";
+      meanVal = "meanNew";
     } else {
       newData = fullNest;
       yScale.domain([0, maxNumber]).nice();
       ylabel = "Number of instances";
+      meanVal = "mean";
     }
 
-    yAxis.transition().duration(500).call(d3.axisLeft(yScale));
+    yAxis.transition().duration(length).call(d3.axisLeft(yScale));
 
     d3.select("#ylabel").text(ylabel);
 
     const line = lines.selectAll(".line").data(newData);
-
+    
+    // Redraw the lines
     line
       .enter()
       .append("path")
       .merge(line)
       .transition()
-      .duration(500)
+      .duration(length)
       .attr("fill", "none")
       .attr("class", "line")
       .attr("id", (d) => cleanText(d.key))
@@ -462,6 +468,14 @@ function linePlot(data, figHeight, figWidth) {
         const opacity = cities.includes(d.key) ? 1 : 0;
         return opacity;
       });
+
+      // Draw mean line
+      meanLine
+        .transition()
+        .duration(length)
+        .attr("d", d3.line()
+          .x(d => xScale(d.date))
+          .y(d => yScale(d[meanVal]))(yearsNest));
   }
 }
 
@@ -480,9 +494,11 @@ function cleanText(text) {
 }
 
 function main() {
+
   const infectionsURL =
     "https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data/rivm_corona_in_nl.csv";
 
+  // Read data and plot graph first since it's an async function
   const data = readCSV(infectionsURL);
   data.then((data) => linePlot(data, 500, 1000));
 }
