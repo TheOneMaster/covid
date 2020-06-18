@@ -10,7 +10,7 @@
     <header style="text-align: center;">
         <h1 style="display:inline-block">COVID-19 Statistics</h1>
     </header>
-    <div class="theme-switch-wrapper">
+    <div class="theme-switch-wrapper", id="divToggleStyle">
         <label class="theme-switch" for="styletoggle">
             <input type="checkbox" id="styletoggle">
             <div class="slider round"></div>
@@ -19,13 +19,12 @@
     </div>
     <div class="tab lineplot">
         <div class="tab interact", id="lineInteract"></div>
-        <div class="tab chart", id='lineChart'></div>
+        <div class="tab chart", id='lineChart' width=100%></div>
     </div>
 
     <script>
     // Add CSS changing functionality to dark mode toggle
     const styleToggle = document.getElementById('styletoggle');
-    console.log(styleToggle);
 
     styleToggle.addEventListener("click", changeStyle, false);
 

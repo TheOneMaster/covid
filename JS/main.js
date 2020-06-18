@@ -26,7 +26,7 @@ function linePlot(data, figHeight, figWidth) {
   */
 
   const margin = { top: 20, bottom: 20, left: 20, right: 20 };
-  const padding = { top: 40, bottom: 40, left: 40, right: 20 };
+  const padding = { top: 40, bottom: 40, left: 40, right: 150 };
 
   const innerHeight = figHeight - (margin.top + margin.bottom);
   const innerWidth = figWidth - (margin.left + margin.right);
@@ -61,8 +61,6 @@ function linePlot(data, figHeight, figWidth) {
   // The maximum number of instances at any point in the dataset
   const maxNumber = d3.max(data, (d) => d.number);
   const maxNew = d3.max(cityAgg, (d) => d.value.maxNew);
-
-  console.log(maxNew);
 
   // The names of all the cities in the dataset
   const allCities = cityAgg.map((d) => d.key);
@@ -120,16 +118,10 @@ function linePlot(data, figHeight, figWidth) {
 
   const interact = d3.select("#lineInteract");
 
-  interact
-    .append("input")
-    .attr("type", "checkbox")
-    .attr("class", "switch")
-    .on("click", changeChartType);
-
   // Create a field containing a list of all cities to choose from as filters
   const filters = interact
     .append("fieldset")
-    .style("display", "inline-block")
+    .style("display", "block")
     .style("max-height", `${figHeight}px`)
     .style("min-height", `${figHeight}px`)
     .style("vertical-align", "top")
@@ -157,8 +149,37 @@ function linePlot(data, figHeight, figWidth) {
     .append("a")
     .attr("class", (d) => (cities.includes(d) ? "filter selected" : "filter"))
     .attr("href", "#")
-    .on("click", clickLegend)
+    .on("click", clickFilter)
     .html((d) => d);
+
+  // Create toggle for new cases per day
+
+  const casesToggle = interact
+    .append("div")
+    .attr("class", "theme-switch-wrapper")
+    .style("display", "block")
+    .style("margin", "10px 10px");
+
+  casesToggle
+    .append("span")
+    .style("display", "inline-block")
+    .style("padding", "10px 0px")
+    .text("Toggle for cases per day")
+
+  casesToggle
+    .append("label")
+    .style("float", "right")
+    .attr("class", "theme-switch")
+    .attr("for", "changeChart")
+    .append("input")
+    .attr("type", "checkbox")
+    .attr("id", "changeChart")
+    .on("click", changeChartType)
+    .select(function () {
+      return this.parentNode;
+    })
+    .append("div")
+    .attr("class", "slider round");
 
   // Outer parts of the plot (Title, X Label, Y Label, etc)
   const svg = d3
@@ -243,9 +264,7 @@ function linePlot(data, figHeight, figWidth) {
     .call(
       d3
         .axisBottom(xScale)
-        .ticks(d3.timeDay.every(5))
-        .tickFormat(d3.timeFormat("%b %d"))
-    );
+        .ticks(d3.timeMonth.every(0.5)));
 
   // Draw Gridlines for Y axis
   axes
@@ -316,9 +335,10 @@ function linePlot(data, figHeight, figWidth) {
   /* Draw the legend for the cities */
 
   // The group where the legends are going to be drawn
-  const legend = plot
+  const legend = svg
     .append("g")
     .attr("class", "plot legend")
+    .attr("transform", translate(padding.left + width, padding.top))
     .style("fill", "white");
 
   // let tmp = legend.append("rect")
@@ -332,6 +352,7 @@ function linePlot(data, figHeight, figWidth) {
       .enter()
       .append("g")
       .attr("id", (d) => cleanText(d))
+      // .attr("transform", translate(width, 0))
       .append("circle")
       // .attr("id", d => cleanText(d))
       .attr("cx", 20)
@@ -350,7 +371,7 @@ function linePlot(data, figHeight, figWidth) {
       .text((d) => d);
   }
 
-  function clickLegend(datum) {
+  function clickFilter(datum) {
     // Clean Text for ID entry. For example, no spaces or apostrophes.
     const cleanedName = cleanText(datum);
 
@@ -423,10 +444,11 @@ function linePlot(data, figHeight, figWidth) {
   }
 
   function changeChartType() {
-    
-    const length = 500;
+    // Total duration for the transition of chart type
+    const length = 300;
+
     let newData, ylabel, meanVal;
-    const checked = d3.select(".switch").property("checked");
+    const checked = d3.select("#changeChart").property("checked");
 
     if (checked) {
       newData = casesPerDay;
@@ -440,12 +462,17 @@ function linePlot(data, figHeight, figWidth) {
       meanVal = "mean";
     }
 
+    axes
+      .select(".grid")
+      .transition()
+      .duration(length)
+      .call(d3.axisLeft(yScale).tickSize(-width).ticks(5).tickFormat(""));
     yAxis.transition().duration(length).call(d3.axisLeft(yScale));
-
+    
     d3.select("#ylabel").text(ylabel);
 
     const line = lines.selectAll(".line").data(newData);
-    
+
     // Redraw the lines
     line
       .enter()
@@ -469,13 +496,17 @@ function linePlot(data, figHeight, figWidth) {
         return opacity;
       });
 
-      // Draw mean line
-      meanLine
-        .transition()
-        .duration(length)
-        .attr("d", d3.line()
-          .x(d => xScale(d.date))
-          .y(d => yScale(d[meanVal]))(yearsNest));
+    // Draw mean line
+    meanLine
+      .transition()
+      .duration(length)
+      .attr(
+        "d",
+        d3
+          .line()
+          .x((d) => xScale(d.date))
+          .y((d) => yScale(d[meanVal]))(yearsNest)
+      );
   }
 }
 
@@ -489,18 +520,18 @@ function cleanText(text) {
   cleanText = cleanText.includes(" ")
     ? cleanText.replace(/\s+/g, "_")
     : cleanText;
+  cleanText = cleanText.includes(",") ? cleanText.replace(",", "") : cleanText;
 
   return cleanText;
 }
 
 function main() {
-
   const infectionsURL =
-    "https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data/rivm_corona_in_nl.csv";
+    "https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data/rivm_NL_covid19_total_municipality.csv";
 
   // Read data and plot graph first since it's an async function
   const data = readCSV(infectionsURL);
-  data.then((data) => linePlot(data, 500, 1000));
+  data.then((data) => linePlot(data, 500, 1250));
 }
 
 main();

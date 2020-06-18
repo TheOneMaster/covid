@@ -74,7 +74,7 @@ h1 {
   padding: 12px;
   text-decoration: none;
   font-size: 18px;
-  color: var(--font-color-1);
+  color: var(--font-color-2);
   display: block;
 }
 
@@ -116,6 +116,9 @@ h1 {
 .theme-switch-wrapper {
   display: inline-flex;
   align-items: center;
+}
+
+#divToggleStyle{
   float: right;
 }
 
