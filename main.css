@@ -43,7 +43,8 @@ h1 {
 /* Filter CSS */
 
 #citySearch {
-    background-color: var(--bg-color);
+  color: var(--font-color-2);
+  background-color: var(--bg-color);
   background-image: url("Images/searchicon.png"); /* Add a search icon to input */
   background-position: 4% 50%; /* Position the search icon */
   background-size: 25px;
