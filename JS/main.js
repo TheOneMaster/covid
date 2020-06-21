@@ -73,8 +73,8 @@ function linePlot(data, figHeight, figWidth) {
   allCities.forEach((key, index) => (cityIndex[key] = index));
 
   // Add the Mean value to the list of cities and make it the last index value (always at the bottom)
-  cities.push("Mean");
-  cityIndex["Mean"] = allCities.length;
+  // cities.push("Mean");
+  // cityIndex["Mean"] = allCities.length;
 
   // Constructs a full nest of the data according the city. Stores all data.
   const fullNest = d3
@@ -82,20 +82,20 @@ function linePlot(data, figHeight, figWidth) {
     .key((d) => d.city)
     .entries(data);
 
-  const yearsNest = d3
-    .nest()
-    .key((d) => d.date)
-    .rollup(function (leaves) {
-      return {
-        date: leaves[0].date,
-        mean: d3.mean(leaves, (x) => x.number),
-        meanNew: d3.mean(leaves, (x, ind) =>
-          ind === 0 ? x.number : x.number - leaves[ind - 1].number
-        ),
-      };
-    })
-    .entries(data)
-    .map((d) => d.value);
+  // const yearsNest = d3
+  //   .nest()
+  //   .key((d) => d.date)
+  //   .rollup(function (leaves) {
+  //     return {
+  //       date: leaves[0].date,
+  //       mean: d3.mean(leaves, (x) => x.number),
+  //       meanNew: d3.mean(leaves, (x, ind) =>
+  //         ind === 0 ? x.number : x.number - leaves[ind - 1].number
+  //       ),
+  //     };
+  //   })
+  //   .entries(data)
+  //   .map((d) => d.value);
 
   // Get number of instances in each city per day
   const casesPerDay = fullNest.map(function (elem) {
@@ -304,33 +304,33 @@ function linePlot(data, figHeight, figWidth) {
     });
 
   // The line for the mean over time. Dotted grey line
-  const meanLine = lines
-    .append("path")
-    .attr("id", "Mean")
-    .attr("class", "line mean")
-    .attr("stroke", "grey")
-    .attr("stroke-dasharray", "3, 5")
-    .attr(
-      "d",
-      d3
-        .line()
-        .x((d) => xScale(d.date))
-        .y((d) => yScale(d.mean))(yearsNest)
-    )
-    .style("fill", "none");
+  // const meanLine = lines
+  //   .append("path")
+  //   .attr("id", "Mean")
+  //   .attr("class", "line mean")
+  //   .attr("stroke", "grey")
+  //   .attr("stroke-dasharray", "3, 5")
+  //   .attr(
+  //     "d",
+  //     d3
+  //       .line()
+  //       .x((d) => xScale(d.date))
+  //       .y((d) => yScale(d.mean))(yearsNest)
+  //   )
+  //   .style("fill", "none");
 
   // The text for the mean line. Follows the mean line path.
-  lines
-    .append("text")
-    .attr("class", "mean")
-    .attr("dy", -5)
-    .style("font-size", "1em")
-    .attr("stroke-width", "0")
-    .style("font-family", "monospace")
-    .append("textPath")
-    .attr("xlink:href", "#Mean")
-    .attr("startOffset", "95%")
-    .text("Mean");
+  // lines
+  //   .append("text")
+  //   .attr("class", "mean")
+  //   .attr("dy", -5)
+  //   .style("font-size", "1em")
+  //   .attr("stroke-width", "0")
+  //   .style("font-family", "monospace")
+  //   .append("textPath")
+  //   .attr("xlink:href", "#Mean")
+  //   .attr("startOffset", "95%")
+  //   .text("Mean");
 
   /* Draw the legend for the cities */
 
@@ -445,7 +445,7 @@ function linePlot(data, figHeight, figWidth) {
 
   function changeChartType() {
     // Total duration for the transition of chart type
-    const length = 300;
+    const length = 500;
 
     let newData, ylabel, meanVal;
     const checked = d3.select("#changeChart").property("checked");
@@ -497,16 +497,16 @@ function linePlot(data, figHeight, figWidth) {
       });
 
     // Draw mean line
-    meanLine
-      .transition()
-      .duration(length)
-      .attr(
-        "d",
-        d3
-          .line()
-          .x((d) => xScale(d.date))
-          .y((d) => yScale(d[meanVal]))(yearsNest)
-      );
+    // meanLine
+    //   .transition()
+    //   .duration(length)
+    //   .attr(
+    //     "d",
+    //     d3
+    //       .line()
+    //       .x((d) => xScale(d.date))
+    //       .y((d) => yScale(d[meanVal]))(yearsNest)
+    //  );
   }
 }
 
@@ -516,6 +516,7 @@ function translate(x, y) {
 }
 
 function cleanText(text) {
+  // Removes spaces, commas and quotes from string
   let cleanText = text.includes("'") ? text.replace("'", "") : text;
   cleanText = cleanText.includes(" ")
     ? cleanText.replace(/\s+/g, "_")
