@@ -136,7 +136,7 @@ function linePlot(data, figHeight, figWidth) {
     .attr("type", "text")
     .attr("id", "citySearch")
     .attr("placeholder", "Search for cities..")
-    .on("keyup", () => citySearch(d3.event.path[0]));
+    .on("keyup", () => citySearch());
 
   // Add cities as list items that are clickable
   filters
@@ -416,8 +416,10 @@ function linePlot(data, figHeight, figWidth) {
     legend.transition().style("opacity", 1);
   }
 
-  function citySearch(elem) {
+  function citySearch() {
     // The value currently present in text entry
+
+    const elem = document.getElementById("citySearch");
     const key = elem.value.toUpperCase();
 
     // Select the unordered list
