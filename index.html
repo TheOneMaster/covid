@@ -26,14 +26,26 @@
     // Add CSS changing functionality to dark mode toggle
     const styleToggle = document.getElementById('styletoggle');
 
-    styleToggle.addEventListener("click", changeStyle, false);
+    const currentTheme = localStorage.getItem("theme");
+
+    if (currentTheme){
+        document.documentElement.setAttribute("data-theme", currentTheme);
+
+        if (currentTheme=="dark"){
+            styleToggle.checked = true;
+        }
+    }
 
     function changeStyle(element){
         if (element.target.checked){
         document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem("theme", "dark");
         } else {
         document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem("theme", "light");
         }
     }
+
+    styleToggle.addEventListener("click", changeStyle, false);
     </script>
 </body>
